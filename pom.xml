@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>rocketmq-demo</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <!--<maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>-->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <spring.boot.version>2.5.9</spring.boot.version>
+        <spring.version>5.3.20</spring.version>
+
+        <rocketmq.spring.boot.version>2.2.3-SNAPSHOT</rocketmq.spring.boot.version>
+
+        <rocketmq.version>4.9.3</rocketmq.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <jackson.version>2.11.1</jackson.version>
+        <fastjson.version>1.2.83</fastjson.version>
+        <junit.version>4.13.2</junit.version>
+
+        <java.version>1.8</java.version>
+        <resource.delimiter>@</resource.delimiter>
+        <!-- Delimiter that doesn't clash with Spring ${} placeholders -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <additionalparam>-Xdoclint:none</additionalparam>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <jackson.databind.version>2.11.4</jackson.databind.version>
+        <!-- Exclude all generated code -->
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>${rocketmq.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure-processor</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <!--日志实现包
+            logback-classic 包里面包含有 slf4j-api 包
+            只需要引入 logback-classic 包即可-->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.databind.version}</version>
+        </dependency>
+
+    </dependencies>
+</project>
