@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
  * @author: wangyao
  * @create 2022/8/17 20:39
  */
+@Deprecated
 public class TransactionOrderConsumer {
 
     private static Logger logger = LoggerFactory.getLogger(TransactionOrderConsumer.class);
@@ -32,14 +33,14 @@ public class TransactionOrderConsumer {
         consumer.setNamesrvAddr(Constant.NAME_SRV_ADDR);
 
         // 订阅  ,订阅一个或者多个Topic，以及Tag来过滤需要消费的消息
-        consumer.subscribe("TransactionTopic", "*");
+        consumer.subscribe(Constant.TRANSACTION_TOPIC, "*");
         // 注册回调实现类来处理从broker拉取回来的消息
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 List<String> list = msgs.stream().map(e -> new String(e.getBody())).collect(Collectors.toList());
-                logger.info("线程: {} 接收到新消息: {}{}", Thread.currentThread().getName(),
-                        JSONObject.toJSONString(list), msgs);
+                logger.info("线程: {} 接收到新消息: {}", Thread.currentThread().getName(),
+                        JSONObject.toJSONString(list));
                 // 标记该消息已经被成功消费
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }

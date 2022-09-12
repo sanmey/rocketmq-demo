@@ -1,11 +1,15 @@
 package org.example.scheduled;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.example.util.Constant;
+import org.example.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * @Classname ScheduledMessageConsumer
  * @description ScheduledMessageConsumer
@@ -15,8 +19,12 @@ import org.example.util.Constant;
 
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ScheduledMessageConsumer {
+
+    private static Logger logger = LoggerFactory.getLogger(ScheduledMessageConsumer.class);
     public static void main(String[] args) throws Exception {
         // 实例化消费者
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("ScheduledMessageConsumerA");
@@ -27,10 +35,8 @@ public class ScheduledMessageConsumer {
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> messages, ConsumeConcurrentlyContext context) {
-                for (MessageExt message : messages) {
-                    // Print approximate delay time period
-                    System.out.println("Receive message[msgId=" + message.getMsgId() + "] " + (System.currentTimeMillis() - message.getBornTimestamp()) + "ms later");
-                }
+                List<Map<String, Object>> list = messages.stream().map(Utils::convertMsgStr).collect(Collectors.toList());
+                logger.info("接收到新消息: {}", JSONObject.toJSONString(list));
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });

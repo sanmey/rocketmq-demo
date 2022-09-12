@@ -38,13 +38,9 @@ public class Consumer {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("order_msg_consumer_group" + args[0]);
         consumer.setNamesrvAddr(Constant.NAME_SRV_ADDR);
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-
-        consumer.subscribe(Constant.ORDER_TOPIC, "TagA || TagC || TagD");
         consumer.subscribe(Constant.ORDER_TOPIC, "*");
 
         consumer.registerMessageListener(new MessageListenerOrderly() {
-            AtomicLong consumeTimes = new AtomicLong(0);
-
             @Override
             public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs, ConsumeOrderlyContext context) {
                 context.setAutoCommit(true);

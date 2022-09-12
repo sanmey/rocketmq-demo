@@ -46,7 +46,7 @@ public class Producer {
                 long orderId = SnowFlakeIdGenerator.getInstance().nextId();
                 String id = String.valueOf(orderId);
                 Message msg = new Message(Constant.ORDER_TOPIC, tags[i % tags.length], id,
-                        ("Hello RocketMQ " + id).getBytes(RemotingHelper.DEFAULT_CHARSET));
+                        ("RocketMQ Order Msg " + id).getBytes(RemotingHelper.DEFAULT_CHARSET));
                 producer.send(msg, new MessageQueueSelector() {
                     @Override
                     public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
@@ -54,8 +54,8 @@ public class Producer {
                         logger.info("消息ID= {} 路由队列-> {}", msg.getKeys(), queue.getQueueId());
                         return queue;
                     }
-                }, orderId);
-                if(i%10==0){
+                }, null);
+                if (i % 10 == 0) {
                     Thread.sleep(2000);
                 }
                 //System.out.printf("%s%n", sendResult);

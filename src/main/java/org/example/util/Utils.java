@@ -3,6 +3,7 @@ package org.example.util;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.rocketmq.common.message.Message;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,14 +11,23 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * @Classname Util
- * @description Util
+ * @Classname Utils
+ * @description Utils
  * @author: wangyao
  * @create 2022/8/23 18:43
  */
-public class Util {
+public class Utils {
+
+    public static Map<String, Object> convertMsgStr(Message message) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("orderId", message.getKeys());
+        map.put("body", new String(message.getBody()));
+        return map;
+    }
 
     public static String toJSONString(Object obj) {
         ObjectMapper objectMapper = new ObjectMapper();

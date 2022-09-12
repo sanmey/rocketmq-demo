@@ -21,7 +21,10 @@ public class ScheduledMessageProducer {
         producer.start();
         int totalMessagesToSend = 100;
         for (int i = 0; i < totalMessagesToSend; i++) {
-            Message message = new Message(Constant.SCHEDULED_TOPIC, ("Hello scheduled message " + i).getBytes());
+            Message message = new Message(
+                    Constant.SCHEDULED_TOPIC,
+                    "", String.valueOf(i),
+                    ("Hello scheduled message " + i).getBytes());
             //messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
             // 设置延时等级3,这个消息将在10s之后发送(现在只支持固定的几个时间,详看delayTimeLevel)
             message.setDelayTimeLevel(1);

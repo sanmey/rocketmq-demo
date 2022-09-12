@@ -8,7 +8,7 @@ import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.example.util.Constant;
-import org.example.util.Util;
+import org.example.util.Utils;
 import org.example.domain.OrderPaidEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +25,10 @@ import java.util.UUID;
  * @author: wangyao
  * @create 2022/8/17 20:39
  */
+@Deprecated
 public class TransactionOrderProducer {
 
     static Random random = new Random();
-
-    static String MSG_ID_KEY = "MSG_ID";
-
-    static String TOPIC = "TransactionTopic";
 
     private static Logger logger = LoggerFactory.getLogger(TransactionOrderProducer.class);
 
@@ -48,17 +45,14 @@ public class TransactionOrderProducer {
             @Override
             public LocalTransactionState executeLocalTransaction(Message message, Object o) {
                 LocalTransactionState localTransactionState = LocalTransactionState.ROLLBACK_MESSAGE;
-                message.getKeys();
-                if (o instanceof String) {
-                    String mqId = (String) o;
-                    //do TransactionA
-                    //do TransactionB
-                    boolean flag = random.nextBoolean();
-                    if (flag) {
-                        localTransactionState = LocalTransactionState.COMMIT_MESSAGE;
-                    }
+                String mqId = message.getKeys();
+                //do TransactionA
+                //do TransactionB
+                boolean flag = random.nextBoolean();
+                if (flag) {
+                    localTransactionState = LocalTransactionState.COMMIT_MESSAGE;
                 }
-                localTransactionResult.put(message.getProperty(MSG_ID_KEY), localTransactionState);
+                localTransactionResult.put(mqId, localTransactionState);
                 if (random.nextBoolean()) {
                     throw new RuntimeException("事务处理异常，状态未知");
                 }
@@ -67,7 +61,7 @@ public class TransactionOrderProducer {
 
             @Override
             public LocalTransactionState checkLocalTransaction(MessageExt message) {
-                LocalTransactionState state = localTransactionResult.getOrDefault(message.getProperty(MSG_ID_KEY), LocalTransactionState.UNKNOW);
+                LocalTransactionState state = localTransactionResult.getOrDefault(message.getKeys(), LocalTransactionState.UNKNOW);
                 logger.info("回查本地事务状态:{},消息内容:{}", state, message);
                 // 需要根据业务，查询本地事务是否执行成功，这里直接返回COMMIT
                 return state;
@@ -82,11 +76,11 @@ public class TransactionOrderProducer {
                 //MessageBuilder.withPayload(payload).build()
                 String mqId = UUID.randomUUID().toString();
 
-                Message msg = new Message(TOPIC, "", Util.toMessageBody(
+                Message msg = new Message(Constant.TRANSACTION_TOPIC, "", Utils.toMessageBody(
                         new OrderPaidEvent(UUID.randomUUID().toString(), new BigDecimal(i)))
                 );
                 // 设置消息ID
-                msg.putUserProperty(MSG_ID_KEY, mqId);
+                msg.setKeys(mqId);
                 // 使用事务方式发送消息
                 SendResult sendResult = producer.sendMessageInTransaction(msg, mqId);
                 SendStatus sendStatus = sendResult.getSendStatus();
