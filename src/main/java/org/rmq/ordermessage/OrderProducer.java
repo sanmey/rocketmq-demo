@@ -14,26 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.example.ordermessage;
+package org.rmq.ordermessage;
 
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
-import org.example.util.Constant;
-import org.example.util.SendCallbackA;
-import org.example.util.SnowFlakeIdGenerator;
+import org.rmq.util.Constant;
+import org.rmq.util.SnowFlakeIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
-public class Producer {
+public class OrderProducer {
 
-    private static Logger logger = LoggerFactory.getLogger(Producer.class);
+    private static Logger logger = LoggerFactory.getLogger(OrderProducer.class);
 
     public static void main(String[] args) throws UnsupportedEncodingException {
         try {
@@ -42,23 +40,28 @@ public class Producer {
             producer.start();
 
             String[] tags = new String[]{"TagA", "TagB", "TagC", "TagD", "TagE"};
-            for (int i = 0; i < 1000; i++) {
-                long orderId = SnowFlakeIdGenerator.getInstance().nextId();
-                String id = String.valueOf(orderId);
-                Message msg = new Message(Constant.ORDER_TOPIC, tags[i % tags.length], id,
-                        ("RocketMQ Order Msg " + id).getBytes(RemotingHelper.DEFAULT_CHARSET));
-                producer.send(msg, new MessageQueueSelector() {
-                    @Override
-                    public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
-                        MessageQueue queue = mqs.get(ShardUtil.getShardIndex(mqs.size(), msg));
-                        logger.info("消息ID= {} 路由队列-> {}", msg.getKeys(), queue.getQueueId());
-                        return queue;
+            int count = Integer.MAX_VALUE;
+            for (int i = 0; i < count; i++) {
+                try {
+                    long orderId = SnowFlakeIdGenerator.getInstance().nextId();
+                    String id = String.valueOf(orderId);
+                    Message msg = new Message(Constant.ORDER_TOPIC, tags[i % tags.length], id,
+                            ("RocketMQ Order Msg " + id).getBytes(RemotingHelper.DEFAULT_CHARSET));
+                    producer.send(msg, new MessageQueueSelector() {
+                        @Override
+                        public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
+                            MessageQueue queue = mqs.get(ShardUtil.getShardIndex(mqs.size(), msg));
+                            logger.info("消息ID= {} 路由队列-> {}", msg.getKeys(), queue.getQueueId());
+                            return queue;
+                        }
+                    }, null);
+                    if (i % 10 == 0) {
+                        Thread.sleep(2000);
                     }
-                }, null);
-                if (i % 10 == 0) {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    logger.error("生产消息{}异常", i, e);
                 }
-                //System.out.printf("%s%n", sendResult);
             }
             producer.shutdown();
         } catch (Exception e) {

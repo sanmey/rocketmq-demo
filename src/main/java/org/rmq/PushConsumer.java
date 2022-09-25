@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.example.broadcast;
+package org.rmq;
 
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -23,35 +23,28 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
-import org.example.util.Constant;
+import org.rmq.util.Constant;
 
 import java.util.List;
 
 public class PushConsumer {
 
     public static void main(String[] args) throws InterruptedException, MQClientException {
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("broadcast_msg_consumer_group");
-
-        consumer.setNamesrvAddr(Constant.NAME_SRV_ADDR);
-
-        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-
-        consumer.setMessageModel(MessageModel.BROADCASTING);
-
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("ConsumerGroupA");
         consumer.subscribe(Constant.COMMON_TOPIC, "*");
-
+        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+        //wrong time format 2017_0422_221800
+        consumer.setConsumeTimestamp("20181109221800");
+        consumer.setNamesrvAddr(Constant.NAME_SRV_ADDR);
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 
             @Override
-            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-                ConsumeConcurrentlyContext context) {
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 System.out.printf("%s Receive New Messages: %s %n", Thread.currentThread().getName(), msgs);
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
-
         consumer.start();
-        System.out.printf("Broadcast Consumer Started.%n");
+        System.out.printf("OrderConsumer Started.%n");
     }
 }

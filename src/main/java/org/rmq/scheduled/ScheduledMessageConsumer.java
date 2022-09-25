@@ -1,4 +1,4 @@
-package org.example.scheduled;
+package org.rmq.scheduled;
 
 import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -6,8 +6,8 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.example.util.Constant;
-import org.example.util.Utils;
+import org.rmq.util.Constant;
+import org.rmq.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**

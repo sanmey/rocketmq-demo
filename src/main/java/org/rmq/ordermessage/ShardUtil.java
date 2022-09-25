@@ -1,7 +1,6 @@
-package org.example.ordermessage;
+package org.rmq.ordermessage;
 
 import org.apache.rocketmq.common.message.Message;
-import org.example.async.AsyncProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

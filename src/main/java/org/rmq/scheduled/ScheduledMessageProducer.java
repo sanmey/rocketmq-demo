@@ -1,8 +1,8 @@
-package org.example.scheduled;
+package org.rmq.scheduled;
 
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.Message;
-import org.example.util.Constant;
+import org.rmq.util.Constant;
 
 /**
  * @Classname ScheduledMessageProducer

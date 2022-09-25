@@ -1,23 +1,22 @@
-package org.example.transaction;
+package org.rmq.transaction;
 
+import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
 import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.client.producer.TransactionListener;
 import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.example.util.Constant;
-import org.example.util.Utils;
-import org.example.domain.OrderPaidEvent;
+import org.apache.rocketmq.remoting.common.RemotingHelper;
+import org.rmq.util.Constant;
+import org.rmq.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * @Classname TransactionProducer
@@ -25,12 +24,11 @@ import java.util.UUID;
  * @author: wangyao
  * @create 2022/8/17 20:39
  */
-@Deprecated
-public class TransactionOrderProducer {
+public class TransactionProducer {
 
     static Random random = new Random();
 
-    private static Logger logger = LoggerFactory.getLogger(TransactionOrderProducer.class);
+    private static Logger logger = LoggerFactory.getLogger(TransactionProducer.class);
 
 
     public static void main(String[] args) throws Exception {
@@ -45,15 +43,18 @@ public class TransactionOrderProducer {
             @Override
             public LocalTransactionState executeLocalTransaction(Message message, Object o) {
                 LocalTransactionState localTransactionState = LocalTransactionState.ROLLBACK_MESSAGE;
-                String mqId = message.getKeys();
+                String orderId = message.getKeys();
                 //do TransactionA
                 //do TransactionB
                 boolean flag = random.nextBoolean();
                 if (flag) {
                     localTransactionState = LocalTransactionState.COMMIT_MESSAGE;
                 }
-                localTransactionResult.put(mqId, localTransactionState);
+                localTransactionResult.put(orderId, localTransactionState);
+                Map<String, Object> map = (Map) o;
+                map.put(orderId, localTransactionState);
                 if (random.nextBoolean()) {
+                    //do Transaction Error
                     throw new RuntimeException("事务处理异常，状态未知");
                 }
                 return localTransactionState;
@@ -62,8 +63,7 @@ public class TransactionOrderProducer {
             @Override
             public LocalTransactionState checkLocalTransaction(MessageExt message) {
                 LocalTransactionState state = localTransactionResult.getOrDefault(message.getKeys(), LocalTransactionState.UNKNOW);
-                logger.info("回查本地事务状态:{},消息内容:{}", state, message);
-                // 需要根据业务，查询本地事务是否执行成功，这里直接返回COMMIT
+                logger.info("回查本地事务状态:{},消息内容:{}", state, Utils.convertMsgStr(message));
                 return state;
             }
         });
@@ -73,24 +73,21 @@ public class TransactionOrderProducer {
         // 发送10条消息
         for (int i = 0; i < 10; i++) {
             try {
-                //MessageBuilder.withPayload(payload).build()
-                String mqId = UUID.randomUUID().toString();
+                String orderId = String.valueOf(i);
+                Map<String, Object> map = new HashMap<>();
 
-                Message msg = new Message(Constant.TRANSACTION_TOPIC, "", Utils.toMessageBody(
-                        new OrderPaidEvent(UUID.randomUUID().toString(), new BigDecimal(i)))
-                );
+                Message msg = new Message(Constant.TRANSACTION_TOPIC, "", ("Transaction Message" + i)
+                        .getBytes(RemotingHelper.DEFAULT_CHARSET));
                 // 设置消息ID
-                msg.setKeys(mqId);
+                msg.setKeys(orderId);
                 // 使用事务方式发送消息
-                SendResult sendResult = producer.sendMessageInTransaction(msg, mqId);
-                SendStatus sendStatus = sendResult.getSendStatus();
-                logger.info("第{}个消息，sendResult={}", i, sendResult);
+                SendResult sendResult = producer.sendMessageInTransaction(msg, map);
+                logger.info("消息ID: {},事务状态: {},SendStatus={}", orderId, map.get(orderId), sendResult.getSendStatus());
                 Thread.sleep(10);
-            } catch (Exception e) {
+            } catch (MQClientException | UnsupportedEncodingException e) {
                 logger.error("第{}个消息发送异常", i, e);
             }
         }
-
         // 阻塞，目的是为了在消息发送完成后才关闭生产者
         Thread.sleep(100000);
         producer.shutdown();

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.example.ordermessage;
+package org.rmq.ordermessage;
 
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
@@ -23,16 +23,15 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.example.util.Constant;
+import org.rmq.util.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class Consumer {
+public class OrderConsumer {
 
-    private static Logger logger = LoggerFactory.getLogger(Consumer.class);
+    private static Logger logger = LoggerFactory.getLogger(OrderConsumer.class);
 
     public static void main(String[] args) throws MQClientException {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("order_msg_consumer_group" + args[0]);
@@ -45,17 +44,19 @@ public class Consumer {
             public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs, ConsumeOrderlyContext context) {
                 context.setAutoCommit(true);
                 for (MessageExt msg : msgs) {
-                    logger.info("消息ID= {} 路由队列-> {} 消息内容 {}",
+                    logger.info("消息ID= {} 路由队列-> {} 消息内容 {} bornHost {} storeHost {}",
                             msg.getKeys(),
                             context.getMessageQueue().getQueueId(),
-                            new String(msg.getBody()));
+                            new String(msg.getBody()),
+                            msg.getBornHost()
+                            , msg.getStoreHost());
                 }
                 return ConsumeOrderlyStatus.SUCCESS;
             }
         });
 
         consumer.start();
-        System.out.printf("Consumer Started.%n");
+        System.out.printf("OrderConsumer Started.%n");
     }
 
 }

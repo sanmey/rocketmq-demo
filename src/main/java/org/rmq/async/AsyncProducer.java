@@ -14,26 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.example;
+package org.rmq.async;
 
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
-import org.example.util.Constant;
-import org.example.util.SendCallbackA;
-import org.example.util.SnowFlakeIdGenerator;
+import org.rmq.util.Constant;
+import org.rmq.util.SendCallbackA;
+import org.rmq.util.SnowFlakeIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CountDownLatch;
 
-import static org.example.util.Constant.COMMON_TOPIC;
+import static org.rmq.util.Constant.COMMON_TOPIC;
 
-public class Producer {
+public class AsyncProducer {
 
-    private static Logger logger = LoggerFactory.getLogger(Producer.class);
+    private static Logger logger = LoggerFactory.getLogger(AsyncProducer.class);
 
     public static void main(
             String[] args) throws MQClientException, InterruptedException, UnsupportedEncodingException {
@@ -43,18 +43,19 @@ public class Producer {
         producer.setRetryTimesWhenSendAsyncFailed(0);
         producer.start();
         int messageCount = 6;
+        final CountDownLatch countDownLatch = new CountDownLatch(messageCount);
         for (int i = 0; i < messageCount; i++) {
             try {
                 String id = String.valueOf(SnowFlakeIdGenerator.getInstance().nextId());
                 Message msg = new Message(COMMON_TOPIC,
                         "TagA", id
                         , ("Hello world" + id).getBytes(RemotingHelper.DEFAULT_CHARSET));
-                producer.send(msg);
-                logger.info("{} 消息发送成功 {}", msg.getKeys(), msg);
+                producer.send(msg, new SendCallbackA(msg, countDownLatch));
             } catch (Exception e) {
                 logger.error("消息发送失败", e);
             }
         }
+        countDownLatch.await();
         producer.shutdown();
     }
 }

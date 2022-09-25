@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.example;
+package org.rmq.broadcast;
 
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -23,28 +23,45 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.example.util.Constant;
+import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
+import org.rmq.util.Constant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class PushConsumer {
 
+    private static Logger logger = LoggerFactory.getLogger(PushConsumer.class);
+
     public static void main(String[] args) throws InterruptedException, MQClientException {
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("ConsumerGroupA");
-        consumer.subscribe(Constant.COMMON_TOPIC, "*");
-        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        //wrong time format 2017_0422_221800
-        consumer.setConsumeTimestamp("20181109221800");
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("broadcast_msg_consumer_group");
+
         consumer.setNamesrvAddr(Constant.NAME_SRV_ADDR);
+
+        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+
+        consumer.setMessageModel(MessageModel.BROADCASTING);
+
+        consumer.subscribe(Constant.COMMON_TOPIC, "*");
+
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 
             @Override
-            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-                System.out.printf("%s Receive New Messages: %s %n", Thread.currentThread().getName(), msgs);
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
+                                                            ConsumeConcurrentlyContext context) {
+                for (MessageExt msg : msgs) {
+                    logger.info("消息ID= {} 路由队列-> {} 消息内容 {} bornHost {}",
+                            msg.getKeys(),
+                            context.getMessageQueue().getQueueId(),
+                            new String(msg.getBody()),
+                            msg.getBornHost());
+                }
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
+
         consumer.start();
-        System.out.printf("Consumer Started.%n");
+        System.out.printf("Broadcast OrderConsumer Started.%n");
     }
 }

@@ -1,4 +1,4 @@
-package org.example.util;
+package org.rmq.util;
 
 public class SnowFlakeIdGenerator {
 

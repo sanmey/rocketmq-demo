@@ -1,9 +1,9 @@
-package org.example.util;
+package org.rmq.util;
 
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
-import org.example.async.AsyncProducer;
+import org.rmq.async.AsyncProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package org.example.transaction;
+package org.rmq.transaction;
 
 import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -6,13 +6,11 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.example.util.Constant;
-import org.example.util.Utils;
+import org.rmq.util.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -21,9 +19,10 @@ import java.util.stream.Collectors;
  * @author: wangyao
  * @create 2022/8/17 20:39
  */
-public class TransactionConsumer {
+@Deprecated
+public class TransactionOrderConsumer {
 
-    private static Logger logger = LoggerFactory.getLogger(TransactionConsumer.class);
+    private static Logger logger = LoggerFactory.getLogger(TransactionOrderConsumer.class);
 
     public static void main(String[] args) throws Exception {
 
@@ -39,15 +38,16 @@ public class TransactionConsumer {
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-                List<Map<String, Object>> list = msgs.stream().map(Utils::convertMsgStr).collect(Collectors.toList());
-                logger.info("接收到新消息: {}", JSONObject.toJSONString(list));
+                List<String> list = msgs.stream().map(e -> new String(e.getBody())).collect(Collectors.toList());
+                logger.info("线程: {} 接收到新消息: {}", Thread.currentThread().getName(),
+                        JSONObject.toJSONString(list));
                 // 标记该消息已经被成功消费
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
         // 启动消费者实例
         consumer.start();
-        System.out.printf("Consumer Started.%n");
+        System.out.printf("OrderConsumer Started.%n");
     }
 
 }
